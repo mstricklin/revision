@@ -26,7 +26,7 @@ dependencies {
 task fatJar(type: Jar) {
     manifest { attributes(
 	    'Implementation-Title': 'Runnable App',
-	    'Main-Class': 'edu.utexas.arlut.ciads.App'
+	    'Main-Class': 'edu.utexas.arlut.ciads.App',
 	    )
     }
     from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }

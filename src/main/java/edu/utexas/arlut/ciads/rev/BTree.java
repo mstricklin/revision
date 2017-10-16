@@ -121,15 +121,15 @@ public class BTree<K extends Comparable<K>, V> implements ITree<K, V>, Iterable<
      * The node's key size is greater than maxKeySize, split down the middle.
      */
     private void split(Node<K, V> nodeToSplit) {
+        log.info("Splitting {}", nodeToSplit.id);
         Node<K, V> node = nodeToSplit;
         int numberOfKeys = node.numberOfKeys();
         int medianIndex = numberOfKeys / 2;
         Map.Entry medianEntry = node.getEntry(medianIndex);
 
         Node<K, V> left = new Node<>(null, maxKeySize, maxChildrenSize);
-        for (int i = 0; i < medianIndex; i++) {
-            left.addEntry(node.getEntry(i));
-        }
+        log.info("new left {}", left.id);
+        left.assignFrom(node, 0, medianIndex);
         if (node.numberOfChildren() > 0) {
             for (int j = 0; j <= medianIndex; j++) {
                 Node<K, V> c = node.getChild(j);
@@ -138,6 +138,7 @@ public class BTree<K extends Comparable<K>, V> implements ITree<K, V>, Iterable<
         }
 
         Node<K, V> right = new Node<>(null, maxKeySize, maxChildrenSize);
+        log.info("new right {}", right.id);
         for (int i = medianIndex + 1; i < numberOfKeys; i++) {
             right.addEntry(node.getEntry(i));
         }
@@ -148,7 +149,8 @@ public class BTree<K extends Comparable<K>, V> implements ITree<K, V>, Iterable<
             }
         }
 
-        if (node.parent == null) {
+//        if (node.parent == null) {
+        if (root == node) {
             // new root, height of tree is increased
             Node<K, V> newRoot = new Node<>(null, maxKeySize, maxChildrenSize);
             newRoot.addEntry(medianEntry);
@@ -176,6 +178,7 @@ public class BTree<K extends Comparable<K>, V> implements ITree<K, V>, Iterable<
     public K remove(K value) {
         K removed = null;
         Node<K, V> node = this.getNode(value);
+        Node<K, V> node2 = this.getNode(root, value);
         removed = remove(value, node);
         return removed;
     }
@@ -250,6 +253,13 @@ public class BTree<K extends Comparable<K>, V> implements ITree<K, V>, Iterable<
     public boolean contains(K key) {
         Node<K, V> node = getNode(key);
         return (node != null);
+    }
+
+    private Node<K,V> getNode(Node<K,V> start, K key) {
+        K[] keys = (K[])new Comparable[start.keysSize];
+        Arrays.setAll(keys, i->start.entries[i].getKey());
+//        Arrays.binarySearch(start.entries, 0, start.keysSize,
+        return null;
     }
 
     /**
@@ -577,9 +587,21 @@ public class BTree<K extends Comparable<K>, V> implements ITree<K, V>, Iterable<
 
         protected Node<T, U> parent = null;
 
+//        private Node(Node<T, U> parent, int maxKeySize, int maxChildrenSize) {
+//            id = ID++;
+////            log.info("new node {}", id);
+//            this.parent = parent;
+//            this.keysSize = 0;
+////            this.keys = (T[]) new Comparable[maxKeySize + 1];
+//            this.entries = new SimpleImmutableEntry[maxKeySize + 1];
+//
+//            this.children = new Node[maxChildrenSize + 1];
+//            this.childrenSize = 0;
+//        }
+
         private Node(Node<T, U> parent, int maxKeySize, int maxChildrenSize) {
             id = ID++;
-            log.info("new node {}", id);
+//            log.info("new node {}", id);
             this.parent = parent;
             this.keysSize = 0;
 //            this.keys = (T[]) new Comparable[maxKeySize + 1];
@@ -608,6 +630,12 @@ public class BTree<K extends Comparable<K>, V> implements ITree<K, V>, Iterable<
 
         private void put(T key, U value) {
             addEntry(new SimpleImmutableEntry<>(key, value));
+        }
+        private void assignFrom(Node<T,U> from, int start, int end) {
+            for (int i = start; i < end; i++) {
+                entries[keysSize++] = from.getEntry(i);
+            }
+            Arrays.sort(entries, 0, keysSize, Map.Entry.comparingByKey());
         }
         private void addEntry(Map.Entry<T, U> e) {
             entries[keysSize++] = e;
@@ -768,7 +796,8 @@ public class BTree<K extends Comparable<K>, V> implements ITree<K, V>, Iterable<
 
             builder.append(prefix).append((isTail ? "└── " : "├── "));
             COMMA_JOINER.appendTo(builder, node.entries);
-            builder.append(" ("+node.id + ")\n");
+
+            builder.append(" ("+node.id+(node.dirty?"X":"")+")\n");
 
             if (node.children != null) {
                 for (int i = 0; i < node.numberOfChildren() - 1; i++) {

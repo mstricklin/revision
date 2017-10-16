@@ -20,11 +20,13 @@ public class App {
         }
 
         System.out.println(bt.toString());
+        bt.put(Integer.valueOf(60), "bbb");
+        System.out.println(bt.toString());
 
-//        bt.remove(20);
-//        System.out.println(bt.toString());
+        bt.remove(20);
+        System.out.println(bt.toString());
 
-        bt.stream().forEach(e -> log.info("{}", e));
+//        bt.stream().forEach(e -> log.info("{}", e));
 
     }
 }
