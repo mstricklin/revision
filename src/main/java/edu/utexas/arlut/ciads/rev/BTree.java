@@ -32,6 +32,7 @@ import java.util.stream.Stream;
 @Slf4j
 public class BTree<K extends Comparable<K>, V> implements ITree<K, V>, Iterable<Map.Entry<K, V>> {
 
+    static Joiner COMMA_JOINER = Joiner.on(", ").skipNulls();
     // Default to 2-3 Tree
     private int minKeySize = 1;
     private int minChildrenSize = minKeySize + 1; // 2
@@ -67,7 +68,7 @@ public class BTree<K extends Comparable<K>, V> implements ITree<K, V>, Iterable<
     public boolean put(K key, V value) {
         if (root == null) {
             root = new Node<K, V>(null, maxKeySize, maxChildrenSize);
-            root.addKey(key);
+            root.put(key, value);
         } else {
             Node<K, V> node = root;
             while (node != null) {
@@ -123,11 +124,11 @@ public class BTree<K extends Comparable<K>, V> implements ITree<K, V>, Iterable<
         Node<K, V> node = nodeToSplit;
         int numberOfKeys = node.numberOfKeys();
         int medianIndex = numberOfKeys / 2;
-        K medianValue = node.getKey(medianIndex);
+        Map.Entry medianEntry = node.getEntry(medianIndex);
 
-        Node<K, V> left = new Node<K, V>(null, maxKeySize, maxChildrenSize);
+        Node<K, V> left = new Node<>(null, maxKeySize, maxChildrenSize);
         for (int i = 0; i < medianIndex; i++) {
-            left.addKey(node.getKey(i));
+            left.addEntry(node.getEntry(i));
         }
         if (node.numberOfChildren() > 0) {
             for (int j = 0; j <= medianIndex; j++) {
@@ -136,9 +137,9 @@ public class BTree<K extends Comparable<K>, V> implements ITree<K, V>, Iterable<
             }
         }
 
-        Node<K, V> right = new Node<K, V>(null, maxKeySize, maxChildrenSize);
+        Node<K, V> right = new Node<>(null, maxKeySize, maxChildrenSize);
         for (int i = medianIndex + 1; i < numberOfKeys; i++) {
-            right.addKey(node.getKey(i));
+            right.addEntry(node.getEntry(i));
         }
         if (node.numberOfChildren() > 0) {
             for (int j = medianIndex + 1; j < node.numberOfChildren(); j++) {
@@ -149,8 +150,8 @@ public class BTree<K extends Comparable<K>, V> implements ITree<K, V>, Iterable<
 
         if (node.parent == null) {
             // new root, height of tree is increased
-            Node<K, V> newRoot = new Node<K, V>(null, maxKeySize, maxChildrenSize);
-            newRoot.addKey(medianValue);
+            Node<K, V> newRoot = new Node<>(null, maxKeySize, maxChildrenSize);
+            newRoot.addEntry(medianEntry);
             node.parent = newRoot;
             root = newRoot;
             node = root;
@@ -159,7 +160,7 @@ public class BTree<K extends Comparable<K>, V> implements ITree<K, V>, Iterable<
         } else {
             // Move the median value up to the parent
             Node<K, V> parent = node.parent;
-            parent.addKey(medianValue);
+            parent.addEntry(medianEntry);
             parent.removeChild(node);
             parent.addChild(left);
             parent.addChild(right);
@@ -204,8 +205,8 @@ public class BTree<K extends Comparable<K>, V> implements ITree<K, V>, Iterable<
             // internal node
             Node<K, V> lesser = node.getChild(index);
             Node<K, V> greatest = this.getGreatestNode(lesser);
-            K replaceValue = this.removeGreatestValue(greatest);
-            node.addKey(replaceValue);
+            Map.Entry<K,V> replaceEntry = this.removeGreatestEntry(greatest);
+            node.addEntry(replaceEntry);
             if (greatest.parent != null && greatest.numberOfKeys() < minKeySize) {
                 this.combined(greatest);
             }
@@ -225,10 +226,10 @@ public class BTree<K extends Comparable<K>, V> implements ITree<K, V>, Iterable<
      * @param node to remove greatest value from.
      * @return value removed;
      */
-    private K removeGreatestValue(Node<K, V> node) {
-        K value = null;
+    private Map.Entry<K,V> removeGreatestEntry(Node<K, V> node) {
+        Map.Entry<K,V> value = null;
         if (node.numberOfKeys() > 0) {
-            value = node.removeKey(node.numberOfKeys() - 1);
+            value = node.removeEntry(node.numberOfKeys() - 1);
         }
         return value;
     }
@@ -252,7 +253,7 @@ public class BTree<K extends Comparable<K>, V> implements ITree<K, V>, Iterable<
     }
 
     /**
-     * Get the node with value.
+     * Get the node with key.
      *
      * @param key to find in the tree.
      * @return Node<K, V> with value.
@@ -340,10 +341,10 @@ public class BTree<K extends Comparable<K>, V> implements ITree<K, V>, Iterable<
             // Try to borrow from right neighbor
             K removeValue = rightNeighbor.getKey(0);
             int prev = getIndexOfPreviousValue(parent, removeValue);
-            K parentValue = parent.removeKey(prev);
-            K neighborValue = rightNeighbor.removeKey(0);
-            node.addKey(parentValue);
-            parent.addKey(neighborValue);
+            Map.Entry<K,V> parentEntry = parent.removeEntry(prev);
+            Map.Entry<K,V> neighborEntry = rightNeighbor.removeEntry(prev);
+            node.addEntry(parentEntry);
+            parent.addEntry(neighborEntry);
             if (rightNeighbor.numberOfChildren() > 0) {
                 node.addChild(rightNeighbor.removeChild(0));
             }
@@ -359,10 +360,10 @@ public class BTree<K extends Comparable<K>, V> implements ITree<K, V>, Iterable<
                 // Try to borrow from left neighbor
                 K removeValue = leftNeighbor.getKey(leftNeighbor.numberOfKeys() - 1);
                 int prev = getIndexOfNextValue(parent, removeValue);
-                K parentValue = parent.removeKey(prev);
-                K neighborValue = leftNeighbor.removeKey(leftNeighbor.numberOfKeys() - 1);
-                node.addKey(parentValue);
-                parent.addKey(neighborValue);
+                Map.Entry<K,V> parentEntry = parent.removeEntry(prev);
+                Map.Entry<K,V> neighborEntry = leftNeighbor.removeEntry(leftNeighbor.numberOfKeys() - 1);
+                node.addEntry(parentEntry);
+                parent.addEntry(neighborEntry);
                 if (leftNeighbor.numberOfChildren() > 0) {
                     node.addChild(leftNeighbor.removeChild(leftNeighbor.numberOfChildren() - 1));
                 }
@@ -370,12 +371,13 @@ public class BTree<K extends Comparable<K>, V> implements ITree<K, V>, Iterable<
                 // Can't borrow from neighbors, try to combined with right neighbor
                 K removeValue = rightNeighbor.getKey(0);
                 int prev = getIndexOfPreviousValue(parent, removeValue);
-                K parentValue = parent.removeKey(prev);
+
+                Map.Entry<K,V> parentEntry = parent.removeEntry(prev);
                 parent.removeChild(rightNeighbor);
-                node.addKey(parentValue);
+                node.addEntry(parentEntry);
                 for (int i = 0; i < rightNeighbor.keysSize; i++) {
-                    K v = rightNeighbor.getKey(i);
-                    node.addKey(v);
+                    Map.Entry<K,V> e = rightNeighbor.getEntry(i);
+                    node.addEntry(e);
                 }
                 for (int i = 0; i < rightNeighbor.childrenSize; i++) {
                     Node<K, V> c = rightNeighbor.getChild(i);
@@ -395,12 +397,12 @@ public class BTree<K extends Comparable<K>, V> implements ITree<K, V>, Iterable<
                 // Can't borrow from neighbors, try to combined with left neighbor
                 K removeValue = leftNeighbor.getKey(leftNeighbor.numberOfKeys() - 1);
                 int prev = getIndexOfNextValue(parent, removeValue);
-                K parentValue = parent.removeKey(prev);
+                Map.Entry<K,V> parentEntry = parent.removeEntry(prev);
                 parent.removeChild(leftNeighbor);
-                node.addKey(parentValue);
+                node.addEntry(parentEntry);
                 for (int i = 0; i < leftNeighbor.keysSize; i++) {
-                    K v = leftNeighbor.getKey(i);
-                    node.addKey(v);
+                    Map.Entry<K,V> e = leftNeighbor.getEntry(i);
+                    node.addEntry(e);
                 }
                 for (int i = 0; i < leftNeighbor.childrenSize; i++) {
                     Node<K, V> c = leftNeighbor.getChild(i);
@@ -557,29 +559,16 @@ public class BTree<K extends Comparable<K>, V> implements ITree<K, V>, Iterable<
      * {@inheritDoc}
      */
     @Override
-    public java.util.Collection<K> toCollection() {
-        return Collections.emptyList();
-//        return (new JavaCompatibleBTree<K>(this));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public String toString() {
         return TreePrinter.getString(this);
     }
 
-    public void dump() {
-        // TODO: node iterator
-        log.info("{}", root);
-    }
-
     private static class Node<T extends Comparable<T>, U> {
-
-        private T[] keys = null;
+        private static int ID = 0;
+        private int id;
+//        private T[] keys = null;
         private int keysSize = 0;
-        private SimpleImmutableEntry<T, U>[] entries = null;
+        private Map.Entry<T, U>[] entries = null;
 
         private Node<T, U>[] children = null;
         private int childrenSize = 0;
@@ -590,9 +579,11 @@ public class BTree<K extends Comparable<K>, V> implements ITree<K, V>, Iterable<
         protected Node<T, U> parent = null;
 
         private Node(Node<T, U> parent, int maxKeySize, int maxChildrenSize) {
+            id = ID++;
+            log.info("new node {}", id);
             this.parent = parent;
             this.keysSize = 0;
-            this.keys = (T[]) new Comparable[maxKeySize + 1];
+//            this.keys = (T[]) new Comparable[maxKeySize + 1];
             this.entries = new SimpleImmutableEntry[maxKeySize + 1];
 
             this.children = new Node[maxChildrenSize + 1];
@@ -604,30 +595,46 @@ public class BTree<K extends Comparable<K>, V> implements ITree<K, V>, Iterable<
         }
 
         private T getKey(int index) {
-            return keys[index];
+            return entries[index].getKey();
         }
 
         private int indexOf(T key) {
             for (int i = 0; i < keysSize; i++) {
                 // Arrays.binarySearch?
-                if (keys[i].equals(key)) return i;
+                if (entries[i].getKey().equals(key))
+                    return i;
             }
             return -1;
         }
 
         private void put(T key, U value) {
-            keys[keysSize] = key;
-            Arrays.sort(keys, 0, keysSize + 1);
-            entries[keysSize++] = new SimpleImmutableEntry<>(key, value);
+            addEntry(new SimpleImmutableEntry<T, U>(key, value));
+        }
+        private void addEntry(Map.Entry<T, U> e) {
+            entries[keysSize++] = e;
             Arrays.sort(entries, 0, keysSize, Map.Entry.comparingByKey());
         }
 
-        private void addKey(T key) {
-            put(key, null);
-//            keys[keysSize++] = key;
-//            Arrays.sort(keys, 0, keysSize);
+        private Map.Entry<T, U> removeEntry(Map.Entry<T, U> e) {
+            Map.Entry<T, U> removed = null;
+            boolean found = false;
+            if (keysSize == 0) return null;
+            for (int i = 0; i < keysSize; i++) {
+                if (entries[i].equals(e)) {
+                    found = true;
+                    removed = entries[i];
+                } else if (found) {
+                    // TODO: System.arraycopy();
+                    // shift the rest of the keys down
+                    entries[i - 1] = entries[i];
+                }
+            }
+            if (found) {
+                keysSize--;
+                entries[keysSize] = null;
+            }
+            return removed;
         }
-
         private T removeKey(T key) {
             T removed = null;
             boolean found = false;
@@ -650,7 +657,20 @@ public class BTree<K extends Comparable<K>, V> implements ITree<K, V>, Iterable<
             }
             return removed;
         }
-
+        private Map.Entry<T, U> removeEntry(int index) {
+            if (index >= keysSize)
+                return null;
+            Map.Entry<T, U> value = entries[index];
+            for (int i = index + 1; i < keysSize; i++) {
+                // shift the rest of the keys down
+                keys[i - 1] = keys[i];
+                entries[i - 1] = entries[i];
+            }
+            keysSize--;
+            keys[keysSize] = null;
+            entries[keysSize] = null;
+            return value;
+        }
         private T removeKey(int index) {
             if (index >= keysSize)
                 return null;
@@ -669,7 +689,7 @@ public class BTree<K extends Comparable<K>, V> implements ITree<K, V>, Iterable<
         private int numberOfKeys() {
             return keysSize;
         }
-
+        // =================================
         private Node<T, U> getChild(int index) {
             if (index >= childrenSize)
                 return null;
@@ -731,12 +751,13 @@ public class BTree<K extends Comparable<K>, V> implements ITree<K, V>, Iterable<
         /**
          * {@inheritDoc}
          */
-        static Joiner COMMA_JOINER = Joiner.on(", ").skipNulls();
+
 
         @Override
         public String toString() {
             StringBuilder builder = new StringBuilder();
 
+            builder.append(Integer.toString(id)+" ");
             builder.append("keys=[");
             COMMA_JOINER.appendTo(builder, keys);
             builder.append("]\n");
@@ -766,12 +787,8 @@ public class BTree<K extends Comparable<K>, V> implements ITree<K, V>, Iterable<
             StringBuilder builder = new StringBuilder();
 
             builder.append(prefix).append((isTail ? "└── " : "├── "));
-            for (int i = 0; i < node.numberOfKeys(); i++) {
-                builder.append(node.getEntry(i));
-                if (i < node.numberOfKeys() - 1)
-                    builder.append(", ");
-            }
-            builder.append("\n");
+            COMMA_JOINER.appendTo(builder, node.entries);
+            builder.append(" ("+node.id + ")\n");
 
             if (node.children != null) {
                 for (int i = 0; i < node.numberOfChildren() - 1; i++) {

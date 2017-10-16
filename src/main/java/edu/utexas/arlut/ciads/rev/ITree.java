@@ -60,11 +60,4 @@ public interface ITree<K, V> {
      */
     public boolean validate();
 
-    /**
-     * Get Tree as a Java compatible Collection
-     *
-     * @return Java compatible Collection
-     */
-    public java.util.Collection<K> toCollection();
-
 }

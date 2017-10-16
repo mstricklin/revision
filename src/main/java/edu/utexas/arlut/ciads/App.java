@@ -21,8 +21,10 @@ public class App {
 
         System.out.println(bt.toString());
 
-//        bt.stream().forEach(e -> log.info("{}", e));
-//        bt.dump();
+//        bt.remove(20);
+//        System.out.println(bt.toString());
+
+        bt.stream().forEach(e -> log.info("{}", e));
 
     }
 }
