@@ -566,7 +566,6 @@ public class BTree<K extends Comparable<K>, V> implements ITree<K, V>, Iterable<
     private static class Node<T extends Comparable<T>, U> {
         private static int ID = 0;
         private int id;
-//        private T[] keys = null;
         private int keysSize = 0;
         private Map.Entry<T, U>[] entries = null;
 
@@ -608,13 +607,32 @@ public class BTree<K extends Comparable<K>, V> implements ITree<K, V>, Iterable<
         }
 
         private void put(T key, U value) {
-            addEntry(new SimpleImmutableEntry<T, U>(key, value));
+            addEntry(new SimpleImmutableEntry<>(key, value));
         }
         private void addEntry(Map.Entry<T, U> e) {
             entries[keysSize++] = e;
             Arrays.sort(entries, 0, keysSize, Map.Entry.comparingByKey());
         }
-
+        private T removeKey(T key) {
+            T removed = null;
+            boolean found = false;
+            if (keysSize == 0) return null;
+            for (int i = 0; i < keysSize; i++) {
+                if (entries[i].getKey().equals(key)) {
+                    found = true;
+                    removed = entries[i].getKey();
+                } else if (found) {
+                    // TODO: System.arraycopy();
+                    // shift the rest of the keys down
+                    entries[i - 1] = entries[i];
+                }
+            }
+            if (found) {
+                keysSize--;
+                entries[keysSize] = null;
+            }
+            return removed;
+        }
         private Map.Entry<T, U> removeEntry(Map.Entry<T, U> e) {
             Map.Entry<T, U> removed = null;
             boolean found = false;
@@ -635,53 +653,15 @@ public class BTree<K extends Comparable<K>, V> implements ITree<K, V>, Iterable<
             }
             return removed;
         }
-        private T removeKey(T key) {
-            T removed = null;
-            boolean found = false;
-            if (keysSize == 0) return null;
-            for (int i = 0; i < keysSize; i++) {
-                if (keys[i].equals(key)) {
-                    found = true;
-                    removed = keys[i];
-                } else if (found) {
-                    // TODO: System.arraycopy();
-                    // shift the rest of the keys down
-                    keys[i - 1] = keys[i];
-                    entries[i - 1] = entries[i];
-                }
-            }
-            if (found) {
-                keysSize--;
-                keys[keysSize] = null;
-                entries[keysSize] = null;
-            }
-            return removed;
-        }
         private Map.Entry<T, U> removeEntry(int index) {
             if (index >= keysSize)
                 return null;
             Map.Entry<T, U> value = entries[index];
             for (int i = index + 1; i < keysSize; i++) {
                 // shift the rest of the keys down
-                keys[i - 1] = keys[i];
                 entries[i - 1] = entries[i];
             }
             keysSize--;
-            keys[keysSize] = null;
-            entries[keysSize] = null;
-            return value;
-        }
-        private T removeKey(int index) {
-            if (index >= keysSize)
-                return null;
-            T value = keys[index];
-            for (int i = index + 1; i < keysSize; i++) {
-                // shift the rest of the keys down
-                keys[i - 1] = keys[i];
-                entries[i - 1] = entries[i];
-            }
-            keysSize--;
-            keys[keysSize] = null;
             entries[keysSize] = null;
             return value;
         }
@@ -758,13 +738,13 @@ public class BTree<K extends Comparable<K>, V> implements ITree<K, V>, Iterable<
             StringBuilder builder = new StringBuilder();
 
             builder.append(Integer.toString(id)+" ");
-            builder.append("keys=[");
-            COMMA_JOINER.appendTo(builder, keys);
+            builder.append("entries=[");
+            COMMA_JOINER.appendTo(builder, entries);
             builder.append("]\n");
 
             if (parent != null) {
                 builder.append("parent=[");
-                COMMA_JOINER.appendTo(builder, parent.keys);
+                COMMA_JOINER.appendTo(builder, parent.entries);
                 builder.append("]\n");
             }
 
