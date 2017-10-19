@@ -564,7 +564,7 @@ public class BTree {
     }
 
     /** Class to define a handle returned by searches.  This class is
-     * opaque, in that outside of the <code>BTree</code> class,
+     * opaque, in that outside of the <code>BTree2</code> class,
      * <code>BTreeHandle</code> objects cannot be examined. */
     private static class BTreeHandle
     {
@@ -674,8 +674,8 @@ public class BTree {
     }
 }
 
-// $Id: BTree.java,v 1.1 2003/10/14 16:56:20 thc Exp $
-// $Log: BTree.java,v $
+// $Id: BTree2.java,v 1.1 2003/10/14 16:56:20 thc Exp $
+// $Log: BTree2.java,v $
 // Revision 1.1  2003/10/14 16:56:20  thc
 // Initial revision.
 //

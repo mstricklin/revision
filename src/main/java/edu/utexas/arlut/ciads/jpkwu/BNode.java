@@ -25,7 +25,7 @@ public class BNode
     {}
 // ----------------------------------------------------
 // initial value constructor for new node             |
-// will be called from BTree.java                     |
+// will be called from BTree2.java                     |
 // ----------------------------------------------------
 
     public BNode(int t, BNode parent)

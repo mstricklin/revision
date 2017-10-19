@@ -3,7 +3,7 @@ package edu.utexas.arlut.ciads.jpkwu;
 
 
 //-----------------------------------------------------------------------
-//this will be the BTree class which all methods being performed on tree|
+//this will be the BTree2 class which all methods being performed on tree|
 //are located. This will call methods in BNode.java and the methods in  |
 //this class will be used to do operations on a tree object.            |                                                                                      |
 //-----------------------------------------------------------------------

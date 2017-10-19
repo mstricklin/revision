@@ -26,6 +26,7 @@ public class App {
         bt.remove(20);
         System.out.println(bt.toString());
 
+
 //        bt.stream().forEach(e -> log.info("{}", e));
 
     }

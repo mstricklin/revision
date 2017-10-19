@@ -1,6 +1,8 @@
 // CLASSIFICATION NOTICE: This file is UNCLASSIFIED
 package edu.utexas.arlut.ciads.rev;
 
+import static com.google.common.collect.Maps.newHashMap;
+
 import com.google.common.base.Joiner;
 import com.google.common.collect.*;
 import lombok.extern.slf4j.Slf4j;
@@ -127,6 +129,7 @@ public class BTree<K extends Comparable<K>, V> implements ITree<K, V>, Iterable<
         int medianIndex = numberOfKeys / 2;
         Map.Entry medianEntry = node.getEntry(medianIndex);
 
+        // split left
         Node<K, V> left = new Node<>(null, maxKeySize, maxChildrenSize);
         log.info("new left {}", left.id);
         left.assignFrom(node, 0, medianIndex);
@@ -137,6 +140,7 @@ public class BTree<K extends Comparable<K>, V> implements ITree<K, V>, Iterable<
             }
         }
 
+        // split right
         Node<K, V> right = new Node<>(null, maxKeySize, maxChildrenSize);
         log.info("new right {}", right.id);
         for (int i = medianIndex + 1; i < numberOfKeys; i++) {
@@ -178,7 +182,6 @@ public class BTree<K extends Comparable<K>, V> implements ITree<K, V>, Iterable<
     public K remove(K value) {
         K removed = null;
         Node<K, V> node = this.getNode(value);
-        Node<K, V> node2 = this.getNode(root, value);
         removed = remove(value, node);
         return removed;
     }
@@ -249,6 +252,10 @@ public class BTree<K extends Comparable<K>, V> implements ITree<K, V>, Iterable<
     /**
      * {@inheritDoc}
      */
+    public V get(K key) {
+        Node<K, V> node = getNode(key);
+        return node.getValue(key);
+    }
     @Override
     public boolean contains(K key) {
         Node<K, V> node = getNode(key);
@@ -618,6 +625,16 @@ public class BTree<K extends Comparable<K>, V> implements ITree<K, V>, Iterable<
         private T getKey(int index) {
             return entries[index].getKey();
         }
+        private U getValue(int index) {
+            return entries[index].getValue();
+        }
+        private U getValue(T key) {
+            for (int i = 0; i < keysSize; i++) {
+                if (entries[i].getKey().equals(key))
+                    return entries[i].getValue();
+            }
+            return null;
+        }
 
         private int indexOf(T key) {
             for (int i = 0; i < keysSize; i++) {
@@ -633,7 +650,7 @@ public class BTree<K extends Comparable<K>, V> implements ITree<K, V>, Iterable<
         }
         private void assignFrom(Node<T,U> from, int start, int end) {
             for (int i = start; i < end; i++) {
-                entries[keysSize++] = from.getEntry(i);
+                entries[keysSize++] = from.entries[i];
             }
             Arrays.sort(entries, 0, keysSize, Map.Entry.comparingByKey());
         }
