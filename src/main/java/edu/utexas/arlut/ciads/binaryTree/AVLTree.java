@@ -84,7 +84,7 @@ public class AVLTree<T extends Comparable<T>> extends BinarySearchTree<T> {
             AVLNode<T> child = null;
             Balance balance = null;
             if (balanceFactor < 0) {
-                child = (AVLNode<T>) node.lesser;
+                child = (AVLNode<T>) node.getLesser();
                 balanceFactor = child.getBalanceFactor();
                 if (balanceFactor < 0)
                     balance = Balance.LEFT_LEFT;
@@ -166,9 +166,9 @@ public class AVLTree<T extends Comparable<T>> extends BinarySearchTree<T> {
         int balanceFactor = node.getBalanceFactor();
         if (balanceFactor == -2 || balanceFactor == 2) {
             if (balanceFactor == -2) {
-                AVLNode<T> ll = (AVLNode<T>) node.lesser.lesser;
+                AVLNode<T> ll = (AVLNode<T>) node.getLesser().getLesser();
                 int lesser = (ll != null) ? ll.height : 0;
-                AVLNode<T> lr = (AVLNode<T>) node.lesser.greater;
+                AVLNode<T> lr = (AVLNode<T>) node.getLesser().greater;
                 int greater = (lr != null) ? lr.height : 0;
                 if (lesser >= greater) {
                     rotateRight(node);
@@ -176,12 +176,12 @@ public class AVLTree<T extends Comparable<T>> extends BinarySearchTree<T> {
                     if (node.getParent() != null)
                         ((AVLNode<T>) node.getParent()).updateHeight();
                 } else {
-                    rotateLeft(node.lesser);
+                    rotateLeft(node.getLesser());
                     rotateRight(node);
 
                     AVLNode<T> p = (AVLNode<T>) node.getParent();
-                    if (p.lesser != null)
-                        ((AVLNode<T>) p.lesser).updateHeight();
+                    if (p.getLesser() != null)
+                        ((AVLNode<T>) p.getLesser()).updateHeight();
                     if (p.greater != null)
                         ((AVLNode<T>) p.greater).updateHeight();
                     p.updateHeight();
@@ -189,7 +189,7 @@ public class AVLTree<T extends Comparable<T>> extends BinarySearchTree<T> {
             } else if (balanceFactor == 2) {
                 AVLNode<T> rr = (AVLNode<T>) node.greater.greater;
                 int greater = (rr != null) ? rr.height : 0;
-                AVLNode<T> rl = (AVLNode<T>) node.greater.lesser;
+                AVLNode<T> rl = (AVLNode<T>) node.greater.getLesser();
                 int lesser = (rl != null) ? rl.height : 0;
                 if (greater >= lesser) {
                     rotateLeft(node);
@@ -201,8 +201,8 @@ public class AVLTree<T extends Comparable<T>> extends BinarySearchTree<T> {
                     rotateLeft(node);
 
                     AVLNode<T> p = (AVLNode<T>) node.getParent();
-                    if (p.lesser != null)
-                        ((AVLNode<T>) p.lesser).updateHeight();
+                    if (p.getLesser() != null)
+                        ((AVLNode<T>) p.getLesser()).updateHeight();
                     if (p.greater != null)
                         ((AVLNode<T>) p.greater).updateHeight();
                     p.updateHeight();
@@ -229,7 +229,7 @@ public class AVLTree<T extends Comparable<T>> extends BinarySearchTree<T> {
             if (avlNode.height != 1)
                 return false;
         } else {
-            AVLNode<T> avlNodeLesser = (AVLNode<T>) avlNode.lesser;
+            AVLNode<T> avlNodeLesser = (AVLNode<T>) avlNode.getLesser();
             int lesserHeight = 1;
             if (avlNodeLesser != null)
                 lesserHeight = avlNodeLesser.height;
@@ -277,7 +277,7 @@ public class AVLTree<T extends Comparable<T>> extends BinarySearchTree<T> {
          * @return True if this node is a leaf.
          */
         protected boolean isLeaf() {
-            return ((lesser == null) && (greater == null));
+            return ((getLesser() == null) && (greater == null));
         }
 
         /**
@@ -285,8 +285,8 @@ public class AVLTree<T extends Comparable<T>> extends BinarySearchTree<T> {
          */
         protected int updateHeight() {
             int lesserHeight = 0;
-            if (lesser != null) {
-                AVLNode<T> lesserAVLNode = (AVLNode<T>) lesser;
+            if (getLesser() != null) {
+                AVLNode<T> lesserAVLNode = (AVLNode<T>) getLesser();
                 lesserHeight = lesserAVLNode.height;
             }
             int greaterHeight = 0;
@@ -312,8 +312,8 @@ public class AVLTree<T extends Comparable<T>> extends BinarySearchTree<T> {
          */
         protected int getBalanceFactor() {
             int lesserHeight = 0;
-            if (lesser != null) {
-                AVLNode<T> lesserAVLNode = (AVLNode<T>) lesser;
+            if (getLesser() != null) {
+                AVLNode<T> lesserAVLNode = (AVLNode<T>) getLesser();
                 lesserHeight = lesserAVLNode.height;
             }
             int greaterHeight = 0;
@@ -330,7 +330,7 @@ public class AVLTree<T extends Comparable<T>> extends BinarySearchTree<T> {
         @Override
         public String toString() {
             return "value=" + id + " height=" + height + " parent=" + ((getParent() != null) ? getParent().id : "NULL")
-                    + " lesser=" + ((lesser != null) ? lesser.id : "NULL") + " greater="
+                    + " lesser=" + ((getLesser() != null) ? getLesser().id : "NULL") + " greater="
                     + ((greater != null) ? greater.id : "NULL");
         }
     }
@@ -354,10 +354,10 @@ public class AVLTree<T extends Comparable<T>> extends BinarySearchTree<T> {
 
             builder.append(prefix + (isTail ? "└── " : "├── ") + node.toString() + "\n");
             List<Node<T>> children = null;
-            if (node.lesser != null || node.greater != null) {
+            if (node.getLesser() != null || node.greater != null) {
                 children = new ArrayList<Node<T>>(2);
-                if (node.lesser != null)
-                    children.add(node.lesser);
+                if (node.getLesser() != null)
+                    children.add(node.getLesser());
                 if (node.greater != null)
                     children.add(node.greater);
             }

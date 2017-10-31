@@ -39,41 +39,9 @@ public class App {
         bt.stream().forEach(e -> log.info("{}", e));
 
 
-        log.info("====================");
-        BinarySearchTree binT = new MyAVLTree(new NodeCreator());
-        for (int i = 0; i < 17; i++) {
-            System.out.println(binT.toString());
-            binT.add(Integer.toString(i));
-        }
-        System.out.println(binT.toString());
+
     }
     // =================================
-    public static class MyAVLTree extends AVLTree<String> {
-        public MyAVLTree(INodeCreator<String> creator) {
-            super((Node<String> parent, String id) -> new MyAVLNode(parent, id));
-        }
-    }
-    public static class NodeCreator implements BinarySearchTree.INodeCreator<String> {
-
-        @Override
-        public BinarySearchTree.Node createNewNode(BinarySearchTree.Node parent, String id) {
-            return new MyAVLNode(parent, id);
-        }
-    }
-    public static class MyAVLNode extends AVLTree.AVLNode<String> {
-        protected boolean dirty=true;
-
-        public MyAVLNode(BinarySearchTree.Node parent, String value) {
-            super(parent, value);
-        }
-        @Override
-        public String toString() {
-            return (dirty?"X":"") + id;
-//            + " height=" + height + " parent=" + ((parent != null) ? parent.id : "NULL")
-//                    + " lesser=" + ((lesser != null) ? lesser.id : "NULL") + " greater="
-//                    + ((greater != null) ? greater.id : "NULL");
-        }
-    }
 }
 
 //        bt.put("aaa", "aaa one");
