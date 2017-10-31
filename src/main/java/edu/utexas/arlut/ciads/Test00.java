@@ -9,7 +9,7 @@ import java.util.Map;
 @Slf4j
 public class Test00 {
     public static void main(String[] args) {
-        log.info("== Foo ==");
+        log.info("== NodeCreator ==");
         @SuppressWarnings("unchecked")
         Entry<String, String>[] entries = (Entry[]) new Entry[4];
 

@@ -1,34 +1,78 @@
 package edu.utexas.arlut.ciads;
 
-import static com.google.common.collect.Maps.newHashMap;
+import static com.google.common.collect.Maps.newTreeMap;
+import static com.google.common.collect.Sets.newHashSet;
 
 import java.util.Map;
+import java.util.Set;
 
-import com.google.common.collect.*;
+import edu.utexas.arlut.ciads.binaryTree.AVLTree;
+import edu.utexas.arlut.ciads.binaryTree.BinarySearchTree;
 import edu.utexas.arlut.ciads.rev.BTree;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class App {
     public static void main(String[] args) {
-        BTree<Integer,String> bt = new BTree<>(3);
-
+        BTree<Integer, String> bt = new BTree<>(3);
 
         String s = new String("foo");
-        for (int i=0; i<64; i++) {
-            bt.put(Integer.valueOf(i), "aaa");
+        bt.put(Integer.valueOf(4), "bbb"+Integer.valueOf(4));
+        bt.put(Integer.valueOf(3), "bbb"+Integer.valueOf(3));
+        bt.put(Integer.valueOf(2), "bbb"+Integer.valueOf(2));
+
+        for (int i = 0; i < 16; i++) {
+            System.out.println(bt.toString());
+            bt.put(Integer.valueOf(i), "aaa"+Integer.valueOf(i));
         }
-
+        Map<String, String> m = newTreeMap();
         System.out.println(bt.toString());
-        bt.put(Integer.valueOf(60), "bbb");
-        System.out.println(bt.toString());
-
-        bt.remove(20);
+        bt.put(Integer.valueOf(1), "zzz");
         System.out.println(bt.toString());
 
+        bt.remove(14);
+        System.out.println(bt.toString());
 
-//        bt.stream().forEach(e -> log.info("{}", e));
+        Set<String> ss = newHashSet();
 
+
+        bt.stream().forEach(e -> log.info("{}", e));
+
+
+        log.info("====================");
+        BinarySearchTree binT = new MyAVLTree(new NodeCreator());
+        for (int i = 0; i < 17; i++) {
+            System.out.println(binT.toString());
+            binT.add(Integer.toString(i));
+        }
+        System.out.println(binT.toString());
+    }
+    // =================================
+    public static class MyAVLTree extends AVLTree<String> {
+        public MyAVLTree(INodeCreator<String> creator) {
+            super((Node<String> parent, String id) -> new MyAVLNode(parent, id));
+        }
+    }
+    public static class NodeCreator implements BinarySearchTree.INodeCreator<String> {
+
+        @Override
+        public BinarySearchTree.Node createNewNode(BinarySearchTree.Node parent, String id) {
+            return new MyAVLNode(parent, id);
+        }
+    }
+    public static class MyAVLNode extends AVLTree.AVLNode<String> {
+        protected boolean dirty=true;
+
+        public MyAVLNode(BinarySearchTree.Node parent, String value) {
+            super(parent, value);
+        }
+        @Override
+        public String toString() {
+            return (dirty?"X":"") + id;
+//            + " height=" + height + " parent=" + ((parent != null) ? parent.id : "NULL")
+//                    + " lesser=" + ((lesser != null) ? lesser.id : "NULL") + " greater="
+//                    + ((greater != null) ? greater.id : "NULL");
+        }
     }
 }
 
