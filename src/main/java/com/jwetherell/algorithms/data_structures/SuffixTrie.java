@@ -41,7 +41,7 @@ public class SuffixTrie<C extends CharSequence> implements ISuffixTree<C> {
      * Add character sequence to the suffix trie.
      * 
      * @param sequence
-     *            to add to trie.
+     *            to put to trie.
      * @return True if added successfully.
      */
     public boolean add(C sequence) {

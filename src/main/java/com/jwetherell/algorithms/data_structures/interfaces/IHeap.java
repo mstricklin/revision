@@ -17,7 +17,7 @@ public interface IHeap<T> {
     /**
      * Add value to the heap.
      * 
-     * @param value to add to the heap.
+     * @param value to put to the heap.
      * @return True if added to the heap.
      */
     public boolean add(T value);

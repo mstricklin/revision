@@ -42,8 +42,8 @@ public abstract class List<T> implements IList<T> {
         /**
          * Add value to list at index.
          * 
-         * @param index to add value.
-         * @param value to add to list.
+         * @param index to put value.
+         * @param value to put to list.
          */
         public boolean add(int index, T value) {
             if (size >= array.length)
@@ -311,7 +311,7 @@ public abstract class List<T> implements IList<T> {
          * Add node to list.
          * 
          * @param node
-         *            to add to list.
+         *            to put to list.
          */
         private boolean add(Node<T> node) {
             if (head == null) {
@@ -719,7 +719,7 @@ public abstract class List<T> implements IList<T> {
          * Add node to list.
          * 
          * @param node
-         *            to add to list.
+         *            to put to list.
          */
         private boolean add(Node<T> node) {
             if (head == null) {

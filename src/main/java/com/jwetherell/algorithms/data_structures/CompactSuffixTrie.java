@@ -37,7 +37,7 @@ public class CompactSuffixTrie<C extends CharSequence> {
      * Add character sequence to the trie.
      * 
      * @param sequence
-     *            to add to trie.
+     *            to put to trie.
      * @return True if added successfully.
      */
     public boolean add(C sequence) {

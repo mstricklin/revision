@@ -53,7 +53,7 @@ public class Trie<C extends CharSequence> implements ITree<C> {
      * Add sequence to trie.
      * 
      * @param seq
-     *            to add to the trie.
+     *            to put to the trie.
      * @return Node which was added to trie or null if it already exists.
      */
     protected Node addSequence(C seq) {

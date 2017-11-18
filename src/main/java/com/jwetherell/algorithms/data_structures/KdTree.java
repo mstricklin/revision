@@ -168,7 +168,7 @@ public class KdTree<T extends KdTree.XYZPoint> implements Iterable<T> {
      * Adds value to the tree. Tree can contain multiple equal values.
      *
      * @param value
-     *            T to add to the tree.
+     *            T to put to the tree.
      * @return True if successfully added to tree.
      */
     public boolean add(T value) {

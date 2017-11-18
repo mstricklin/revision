@@ -15,7 +15,7 @@ public interface ISet<T> {
     /**
      * Add value to set.
      * 
-     * @param value to add.
+     * @param value to put.
      * @return True if added.
      */
     public boolean add(T value);

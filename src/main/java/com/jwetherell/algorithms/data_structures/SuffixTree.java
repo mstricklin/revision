@@ -175,7 +175,7 @@ public class SuffixTree<C extends CharSequence> implements ISuffixTree<C> {
      * Add prefix at index.
      * 
      * @param index
-     *            to add prefix at.
+     *            to put prefix at.
      */
     private void addPrefix(int index) {
         int parentNodeIndex = 0;

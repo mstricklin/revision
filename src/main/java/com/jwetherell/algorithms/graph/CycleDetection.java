@@ -44,7 +44,7 @@ public class CycleDetection {
 
     private static final <T extends Comparable<T>> boolean depthFirstSearch(Graph.Vertex<T> vertex, Set<Graph.Vertex<T>> visitedVerticies, Set<Graph.Edge<T>> visitedEdges) {
         if (!visitedVerticies.contains(vertex)) {
-            // Found an unvisited, add to the set
+            // Found an unvisited, put to the set
             visitedVerticies.add(vertex);
 
             final List<Graph.Edge<T>> edges = vertex.getEdges();

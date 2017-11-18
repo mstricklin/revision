@@ -18,7 +18,7 @@ public interface IQueue<T> {
     /**
      * Add a value to the beginning of the queue.
      * 
-     * @param value to add to queue.
+     * @param value to put to queue.
      * @return True if added to queue.
      */
     public boolean offer(T value);

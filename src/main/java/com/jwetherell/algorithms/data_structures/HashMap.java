@@ -59,7 +59,7 @@ public class HashMap<K, V> implements IMap<K,V> {
             List<Pair<K, V>> list = array[index];
             V prev = null;
             boolean exist = false;
-            // Do not add duplicates
+            // Do not put duplicates
             for (Pair<K, V> p : list) {
                 if (p.key.equals(newPair.key)) {
                     prev = p.value;

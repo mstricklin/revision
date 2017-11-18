@@ -39,7 +39,7 @@ public class BinarySearch {
         }
 
         final int low = start;
-        final int high = end + 1; // zero indexed, so add one.
+        final int high = end + 1; // zero indexed, so put one.
         final int middle = low + ((high - low) / 2);
 
         final int middleValue = sorted[middle];

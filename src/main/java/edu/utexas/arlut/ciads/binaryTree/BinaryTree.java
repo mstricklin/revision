@@ -3,44 +3,107 @@ package edu.utexas.arlut.ciads.binaryTree;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Lists.newArrayListWithExpectedSize;
+import static com.google.common.collect.Lists.reverse;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class BinaryTree<K extends Comparable<K>, V> {
     // what if K/V exist?
     public boolean add(K key, V value) {
-        List<Node<K,V>> path = newArrayList();
-        Node<K, V> newNode = new Node<>(key, value);
-        if (null == root) {
-            root = newNode;
-            return true;
+        List<Node<K,V>> ppp = doAdd(key, value);
+        for (Node<K,V> n: reverse(ppp)) {
+            log.info("\titem: {}", n);
+            int lHeight = null == n.left ? 0 : n.left.balance;
+            int rHeight = null == n.right ? 0 : n.right.balance;
+            log.info("\t\tL{} R{} {}", lHeight, rHeight, n.balance);
+            if (lHeight>rHeight)
+                n.balance = lHeight+1;
+            else if (lHeight<rHeight)
+                n.balance = rHeight+1;
+            else
+                n.balance = 0;
         }
+        System.out.println(ppp.stream().map(Object::toString).collect(Collectors.joining(", ")));
+        return true;
+
+
+//        List<Node<K,V>> path = newArrayList();
+////        Node<K, V> newNode = new Node<>(key, value);
+//        if (null == root) {
+//            root = new Node<>(key, value);
+//            size++;
+//            return true;
+//        }
+//        Node<K, V> node = clone(root);
+//        path.put(node);
+//        root = node;
+//        while (null != node) {
+//            if (0 > node.key.compareTo(key)) { // go left, young man
+//                if (null == node.left) {
+//                    node.left = new Node<>(key, value);
+//                    size++;
+//                    break;
+//                }
+//                node.left = clone(node.left);
+//                node = node.left;
+//            } else if (0 < node.key.compareTo(key)) { // go right
+//                if (null == node.right) {
+//                    node.right = new Node<>(key, value);
+//                    size++;
+//                    break;
+//                }
+//                node.right = clone(node.right);
+//                node = node.right;
+//            } else if (0 == node.key.compareTo(key)) {
+//                node.value = value;
+//                break;
+//            }
+//            path.put(node);
+//        }
+//        System.out.println(path.stream().map(Object::toString).collect(Collectors.joining(", ")));
+//        return true;
+    }
+    private List<Node<K,V>> doAdd(K key, V value) {
+        if (null == root) {
+            root = new Node<>(key, value);
+            return Collections.emptyList();
+        }
+        List<Node<K,V>> path = new ArrayList<>(log2nlz(size) + 1);
         Node<K, V> node = clone(root);
         path.add(node);
         root = node;
         while (null != node) {
-            if (newNode.compareTo(node) < 0) { // go left
+            if (0 > node.key.compareTo(key)) { // go left, young man
                 if (null == node.left) {
-                    node.left = newNode;
-                    break;
+                    node.left = new Node<>(key, value);
+                    return path;
                 }
                 node.left = clone(node.left);
-
                 node = node.left;
-            } else { // go right
+            } else if (0 < node.key.compareTo(key)) { // go right
                 if (null == node.right) {
-                    node.right = newNode;
-                    break;
+                    node.right = new Node<>(key, value);
+                    return path;
                 }
                 node.right = clone(node.right);
                 node = node.right;
+            } else if (0 == node.key.compareTo(key)) {
+                node.value = value;
+                return path;
             }
             path.add(node);
         }
-        System.out.println(path.stream().map(Object::toString).collect(Collectors.joining(", ")));
-        return true;
+//        System.out.println(path.stream().map(Object::toString).collect(Collectors.joining(", ")));
+        return Collections.emptyList();
     }
     public void commit() {
         commit(root);
@@ -66,7 +129,7 @@ public class BinaryTree<K extends Comparable<K>, V> {
         return n == null ? null : n.value;
     }
     public int size() {
-        return 0;
+        return size;
     }
     @Override
     public String toString() {
@@ -84,6 +147,7 @@ public class BinaryTree<K extends Comparable<K>, V> {
 
     // =================================
     private Node<K, V> find(K key) {
+        log.error("this find impl is wrong...");
         Node<K, V> node = root;
         while (null != node) {
             if (node.key.equals(key))
@@ -118,10 +182,11 @@ public class BinaryTree<K extends Comparable<K>, V> {
         }
         return null;
     }
-
+    // =================================
     private Node<K, V> root;
     private List<Node<K, V>> rootHistory = newArrayList();
-
+    private int size = 0;
+    // =================================
     private static class Node<K extends Comparable<K>, V> implements Comparable<Node<K, V>> {
         K key;
         V value;
@@ -149,7 +214,7 @@ public class BinaryTree<K extends Comparable<K>, V> {
         }
         @Override
         public String toString() {
-            return "[" + id + (dirty ? "X|" : "|") + balance + "] " + key + " => " + value;
+            return String.format("[%02d|%s|%d] %s=>%s", id, (dirty?"X":" "), balance, key, value);
         }
     }
 
@@ -169,5 +234,10 @@ public class BinaryTree<K extends Comparable<K>, V> {
             return builder.toString();
         }
     }
-
+    // =================================
+    private static int log2nlz( int bits ) {
+        if( bits == 0 )
+            return 0;
+        return 31 - Integer.numberOfLeadingZeros( bits );
+    }
 }

@@ -20,7 +20,7 @@ public interface ITree<K, V> {
     /**
      * Add value to the tree. Tree can contain multiple equal values.
      *
-     * @param value to add to the tree.
+     * @param value to put to the tree.
      * @return True if successfully added to tree.
      */
     public boolean put(K key, V value);

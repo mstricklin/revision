@@ -11,7 +11,7 @@ import com.jwetherell.algorithms.data_structures.interfaces.IList;
  * a low height. In this version, it is used emulate the operations of an array and linked list.
  * <p>
  * Time Complexity: Assuming the join/merge functions have constant complexity.
- * add(value), add(index,value), remove(index), set(index,value), get(index) all have O(log N).
+ * put(value), put(index,value), remove(index), set(index,value), get(index) all have O(log N).
  * remove(value), get(value), contains(value) all have O(N).
  * <p>
  * Space Complexity: O(N)

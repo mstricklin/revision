@@ -186,13 +186,13 @@ public abstract class QuadTree<G extends QuadTree.XYPoint> {
                 if (!aabb.containsPoint(p) || (isLeaf() && points.contains(p))) 
                     return false; // object cannot be added
 
-                // If there is space in this quad tree, add the object here
+                // If there is space in this quad tree, put the object here
                 if ((height==maxHeight) || (isLeaf() && points.size() < maxCapacity)) {
                     points.add(p);
                     return true;
                 }
 
-                // Otherwise, we need to subdivide then add the point to whichever node will accept it
+                // Otherwise, we need to subdivide then put the point to whichever node will accept it
                 if (isLeaf() && height<maxHeight) 
                     subdivide();
                 return insertIntoChildren(p);
@@ -328,7 +328,7 @@ public abstract class QuadTree<G extends QuadTree.XYPoint> {
                     return;
                 }
 
-                // Otherwise, add the points from the children
+                // Otherwise, put the points from the children
                 northWest.queryRange(range,pointsInRange);
                 northEast.queryRange(range,pointsInRange);
                 southWest.queryRange(range,pointsInRange);
@@ -493,7 +493,7 @@ public abstract class QuadTree<G extends QuadTree.XYPoint> {
                 if (aabbs.contains(b)) 
                     return true; // already exists
 
-                // Subdivide then add the objects to whichever node will accept it
+                // Subdivide then put the objects to whichever node will accept it
                 if (isLeaf()) 
                     subdivide(b);
 
@@ -601,7 +601,7 @@ public abstract class QuadTree<G extends QuadTree.XYPoint> {
                         geometricObjectsInRange.add(b);
                 }
 
-                // Otherwise, add the objects from the children
+                // Otherwise, put the objects from the children
                 if (!isLeaf()) {
                     northWest.queryRange(range,geometricObjectsInRange);
                     northEast.queryRange(range,geometricObjectsInRange);

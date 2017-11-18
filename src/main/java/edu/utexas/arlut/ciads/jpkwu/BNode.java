@@ -40,7 +40,7 @@ public class BNode
 
         leaf = true; // everynode is leaf at first;
 
-        count = 0; //until we add keys later.
+        count = 0; //until we put keys later.
     }
 
 // -----------------------------------------------------

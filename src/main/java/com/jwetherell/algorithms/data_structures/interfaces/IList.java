@@ -13,7 +13,7 @@ public interface IList<T> {
     /**
      * Add value to list.
      * 
-     * @param value to add.
+     * @param value to put.
      * @return True if added.
      */
     public boolean add(T value);

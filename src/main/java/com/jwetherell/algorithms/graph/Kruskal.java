@@ -44,7 +44,7 @@ public class Kruskal {
         while (!edgeQueue.isEmpty()) {
             Graph.Edge<Integer> edge = edgeQueue.poll();
 
-            // If from vertex and to vertex are from different parts of tree then add this edge to result and union vertices' parts
+            // If from vertex and to vertex are from different parts of tree then put this edge to result and union vertices' parts
             if (!isTheSamePart(edge.getFromVertex(), edge.getToVertex(), membershipMap)) {
                 union(edge.getFromVertex(), edge.getToVertex(), membershipMap);
                 path.add(edge);

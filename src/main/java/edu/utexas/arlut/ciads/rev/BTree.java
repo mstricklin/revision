@@ -41,20 +41,6 @@ import java.util.stream.Stream;
  */
 
 /**
- * B-tree is a tree data structure that keeps data sorted and allows searches,
- * sequential access, insertions, and deletions in logarithmic time. The B-tree
- * is a generalization of a binary search tree in that a node can have more than
- * two children. Unlike self-balancing binary search trees, the B-tree is
- * optimized for systems that read and write large blocks of data. It is
- * commonly used in databases and file-systems.
- * <p>
- *
- * @author Justin Wetherell <phishman3579@gmail.com>
- * @see <a href="https://en.wikipedia.org/wiki/B-tree">B-Tree (Wikipedia)</a>
- *
- */
-
-/**
  We use a b-tree here because we need a segmented index, to reduce the cost of iterating the index.
  Each modification requires incrementing the index, a 2-tree would require incrementing log2(n)
  sub-indices. A B-tree of splay-order B requires (if sparse or unbalanced) n/B increments,
@@ -62,11 +48,14 @@ import java.util.stream.Stream;
 
  The minimum size of copies (indices to copy*size of index) is e=2.718, so the optimum integral size
  is a 2-3 tree. This is without overhead such as pointers to parent nodes. With a single additional
- pointer per node, the optimum splay is closer to 3.
+ pointer per node (e.g. child size), the optimum splay is closer to 3. More overhead indicates
+ a larger optimal splay size.
 
- Load is (if B=splay, p=pointer size)
- Bp (for keys) + Bp (for entries) + (B+1)p (for children) + p  (for parent pointer)
+ Given B=splay, p=pointer size, load is:
+ Bp (for keys) + Bp (for entries) + (B+1)p (for children) = (3B+1)p
  additional: int (for entry size) + int (for children size)
+
+ Number of byte copied per iteration: logB(n) * (3B+1)p
  */
 @SuppressWarnings("unchecked")
 @Slf4j

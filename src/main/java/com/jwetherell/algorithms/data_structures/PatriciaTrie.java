@@ -57,7 +57,7 @@ public class PatriciaTrie<C extends CharSequence> implements ITree<C> {
      * sequence.
      * 
      * @param seq
-     *            to add to the trie.
+     *            to put to the trie.
      * @return Node which represents the sequence in the trie or NULL if the
      *         sequence already exists.
      */
@@ -206,7 +206,7 @@ public class PatriciaTrie<C extends CharSequence> implements ITree<C> {
             if (parent != null) 
                 parent.removeChild(node);
         } else if (node.getChildrenSize() == 1) {
-            // Merge the node with it's child and add to node's parent
+            // Merge the node with it's child and put to node's parent
             Node child = node.getChild(0);
             StringBuilder builder = new StringBuilder();
             builder.append(node.string);

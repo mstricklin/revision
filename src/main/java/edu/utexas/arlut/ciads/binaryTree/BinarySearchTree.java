@@ -76,7 +76,7 @@ public class BinarySearchTree<T extends Comparable<T>> implements ITree<T> {
      * contain multiple equal values.
      * 
      * @param value
-     *            T to add to the tree.
+     *            T to put to the tree.
      * @return Node<T> which was added to the tree.
      */
     protected Node<T> addValue(T value) {

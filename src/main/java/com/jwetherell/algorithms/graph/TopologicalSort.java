@@ -66,7 +66,7 @@ public class TopologicalSort {
                 } else {
                     i++;
                 }
-                // Removed all edges from 'from' vertex, add it to the onOutgoing list
+                // Removed all edges from 'from' vertex, put it to the onOutgoing list
                 if (from.getEdges().size() == 0)
                     noOutgoing.add(from);
             }

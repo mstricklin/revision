@@ -1,25 +1,18 @@
 // CLASSIFICATION NOTICE: This file is UNCLASSIFIED
-package edu.utexas.arlut.ciads;
+package edu.utexas.arlut.ciads.shadowMap;
 
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Maps;
-import edu.utexas.arlut.ciads.chain.ChainMap;
-import edu.utexas.arlut.ciads.chain.ChainMap2;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
-import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.Map;
-import java.util.Set;
 
 import static com.google.common.collect.Maps.newHashMap;
 
+import java.util.Map;
+
 @Slf4j
-public class ChainMapTest {
+public class ShadowMapApp {
     public static void main(String[] args) {
-        ChainMap2<String, String> cm = new ChainMap2();
+        ShadowMap<String, String> cm = new ShadowMap();
         cm.put("AAA", "AAA1");
         cm.put("AAB", "AAA1");
         cm.put("BBB", "AAA1");
@@ -67,7 +60,18 @@ public class ChainMapTest {
         if (cm.containsValue("AAA1"))
             log.info("contains AAA1");
 
-        newHashMap();
+        Map<String, String> m = newHashMap();
+        log.info("m hashCode {}", m.hashCode());
+        m.put("K1", "V1");
+        log.info("m hashCode {}", m.hashCode());
+        m.put("K2", "V1");
+        log.info("m hashCode {}", m.hashCode());
+        m.put("K3", "V1");
+        log.info("m hashCode {}", m.hashCode());
+        m.put("K4", "V1");
+        log.info("m hashCode {}", m.hashCode());
+
+
 
     }
 
