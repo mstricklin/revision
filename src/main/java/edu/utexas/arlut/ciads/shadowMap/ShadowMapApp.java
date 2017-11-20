@@ -6,8 +6,10 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.collect.Maps.newHashMap;
+import static com.google.common.collect.Sets.newHashSet;
 
 import java.util.Map;
+import java.util.Set;
 
 @Slf4j
 public class ShadowMapApp {
@@ -60,16 +62,8 @@ public class ShadowMapApp {
         if (cm.containsValue("AAA1"))
             log.info("contains AAA1");
 
-        Map<String, String> m = newHashMap();
-        log.info("m hashCode {}", m.hashCode());
-        m.put("K1", "V1");
-        log.info("m hashCode {}", m.hashCode());
-        m.put("K2", "V1");
-        log.info("m hashCode {}", m.hashCode());
-        m.put("K3", "V1");
-        log.info("m hashCode {}", m.hashCode());
-        m.put("K4", "V1");
-        log.info("m hashCode {}", m.hashCode());
+        final Set<String> keys = newHashSet();
+        cm.forEach((k, v) -> keys.add(k));
 
 
 

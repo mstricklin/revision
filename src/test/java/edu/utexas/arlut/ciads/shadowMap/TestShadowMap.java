@@ -12,7 +12,9 @@ import static org.junit.Assert.*;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.IntStream;
 
+import com.google.common.collect.ImmutableMap;
 import edu.utexas.arlut.ciads.shadowMap.ShadowMap;
 import lombok.extern.slf4j.Slf4j;
 
@@ -106,42 +108,7 @@ public class TestShadowMap {
         assertEquals(1, cm.size());
         assertFalse(cm.isEmpty());
     }
-    // =================================
-    @Test
-    public void size() {
-        // changes size:
-        // 1. put
-        // 2. remove
-        // 3. putAll
-        // 4. clear
-        // 5. rollback
-        assertEquals(0, cm.size());
-        cm.put("K1", "V1a");
-        assertEquals(1, cm.size());
-        cm.put("K1", "V1b");
-        assertEquals(1, cm.size());
-        cm.put("K2", "V2");
-        assertEquals(2, cm.size());
-        cm.rollback();
-        assertEquals(0, cm.size());
 
-        cm.put("K3", "V3");
-        cm.commit();
-        assertEquals(1, cm.size());
-        cm.put("DDD", "V4");
-        assertEquals(2, cm.size());
-        cm.rollback();
-        assertEquals(1, cm.size());
-
-        cm.remove("K3");
-        assertEquals(0, cm.size());
-        cm.rollback();
-        assertEquals(1, cm.size());
-
-        // putAll
-        // clear
-    }
-    // =================================
     @Test
     public void containsValue() {
         cm.put("K1", "V1");
@@ -172,7 +139,7 @@ public class TestShadowMap {
     public void entrySet() {
         cm.put("K1", "V1");
         cm.put("K2", "V2");
-        for (Map.Entry<String,String> e: cm.entrySet()) {
+        for (Map.Entry<String, String> e : cm.entrySet()) {
             log.info("{} => {}", e.getKey(), e.getValue());
         }
 
@@ -220,7 +187,7 @@ public class TestShadowMap {
         cm.put("K3", "V3");
         cm.remove("K2");
         cm.dump();
-        for (String k: cm.keySet())
+        for (String k : cm.keySet())
             log.info("key: {}", k);
         log.info("");
         cm.clear();
@@ -228,7 +195,7 @@ public class TestShadowMap {
         cm.dump();
         log.info("");
         cm.dumpAll();
-        for (String k: cm.keySet())
+        for (String k : cm.keySet())
             log.info("key: {}", k);
         log.info("");
         cm.put("K1", "V1");
@@ -236,7 +203,7 @@ public class TestShadowMap {
         log.info("");
         cm.dumpAll();
         log.info("");
-        for (String k: cm.keySet())
+        for (String k : cm.keySet())
             log.info("key: {}", k);
 
     }
@@ -263,9 +230,10 @@ public class TestShadowMap {
         cm.dumpAll();
         cm.commit();
         log.info("");
+        log.info("=====================");
 
         final Set<String> keys = newHashSet();
-        cm.forEach((k,v) -> keys.add(k));
+        cm.forEach((k, v) -> keys.add(k));
 //        final Set<String> keys = newHashSet();
 //        cm.put("K1", "V1");
 //        cm.put("K2", "V2");
@@ -284,5 +252,18 @@ public class TestShadowMap {
 //        for (Map.Entry e: cm.entrySet())
 //            log.info("{} => {}", e.getKey(), e.getValue());
 //
+    }
+    // =================================
+    @Test
+    public void values() {
+        cm.put("K1", "V1");
+        cm.put("K2", "V3");
+        cm.put("K3", "V3");
+
+        for (String v : cm.values()) {
+            log.info("value {}", v);
+        }
+
+
     }
 }

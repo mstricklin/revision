@@ -1,10 +1,10 @@
 package edu.utexas.arlut.ciads.shadowMap;
 
-import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -24,13 +24,17 @@ public class ShadowMap<K extends Comparable<K>, V> implements Map<K, V> {
     // test size
     // values()
     // putAll size increment
-    // canonical short-cut
+    // test canonical short-cut
 
     public ShadowMap() {
         history.add(current);
     }
     public void commit() {
         current.locked = true;
+        if (current.canonical) {
+            // yes, use ==
+            current.store.entrySet().removeIf(entry -> TOMBSTONE == entry.getValue());
+        }
     }
     public void rollback() {
         history.pop();
@@ -78,13 +82,15 @@ public class ShadowMap<K extends Comparable<K>, V> implements Map<K, V> {
     }
 
     @Override
-    public V put(K key, V value) {
+    public V put(K key, V newV) {
         if (current.locked)
             rollForward();
         V oldV = tombstoneToNull(lookup(key));
-        current.store.put(key, value);
-        if (null == oldV)
+        // put unconditionally?
+        current.store.put(key, newV);
+        if (null == oldV) {
             current.size++;
+        }
         return oldV;
     }
 
@@ -104,7 +110,10 @@ public class ShadowMap<K extends Comparable<K>, V> implements Map<K, V> {
     public void putAll(Map<? extends K, ? extends V> m) {
         if (current.locked)
             rollForward();
-        current.store.putAll(m);
+//        current.store.putAll(m);
+        for (Map.Entry<? extends K, ? extends V> e : m.entrySet()) {
+            put(e.getKey(), e.getValue());
+        }
         // increment size...how?
     }
 
@@ -150,21 +159,27 @@ public class ShadowMap<K extends Comparable<K>, V> implements Map<K, V> {
 
         log.info("");
 
-        List<Revision<K,V>> l = newArrayList();
-        for (Revision<K,V> r: history) {
+        List<Revision<K, V>> l = newArrayList();
+        for (Revision<K, V> r : history) {
             l.add(r);
             if (r.canonical) break;
         }
-        Iterable<Entry<K,V>> it = FluentIterable.from(l)
-                      .transformAndConcat(f -> f.store.entrySet());
+        Iterable<Entry<K, V>> it = FluentIterable.from(l)
+                                                 .transformAndConcat(f -> f.store.entrySet());
 
-        Iterator<Entry<K,V>> iter =  it.iterator();
+        Iterator<Entry<K, V>> iter = it.iterator();
         while (iter.hasNext()) {
-            Entry<K,V> e = iter.next();
+            Entry<K, V> e = iter.next();
             log.info("FI Entry {} => {}", e.getKey(), e.getValue());
         }
 
-        Iterator<Entry<K,V>> it2 = TakeWhile(history.iterator(), r->r.canonical);
+        log.info("");
+        log.info("TakeUntil:");
+        Iterable<Revision<K,V>> tu = new TakeUntil<>(history, IS_CANONICAL);
+        for (Revision<K,V> r: tu)
+            log.info("rev: {}", r);
+
+//        Iterator<Entry<K,V>> it2 = TakeWhile(history.iterator(), r->r.canonical);
 //        for (Entry e : it) {
 //            log.info("FI Entry {} => {}", e.getKey(), e.getValue());
 //        }
@@ -175,14 +190,14 @@ public class ShadowMap<K extends Comparable<K>, V> implements Map<K, V> {
 
     public void dump() {
         for (Revision r : history) {
-            log.info("{} {} {}", r.store, r.locked ? "locked" : "", r.canonical ? "canonical" : "");
+            log.info("{}", r);
             if (r.canonical)
                 break;
         }
     }
     public void dumpAll() {
         for (Revision r : history) {
-            log.info("{} {} {}", r.store, r.locked ? "locked" : "", r.canonical ? "canonical" : "");
+            log.info("{}", r);
         }
     }
 
@@ -344,7 +359,7 @@ public class ShadowMap<K extends Comparable<K>, V> implements Map<K, V> {
                 if (rev.canonical)
                     nextNode = null;
                 else {
-                    rev = rev.parent;
+                    rev = rev.previous;
                     if (null != rev) {
                         it = rev.store.entrySet().iterator();
                         nextNode = next();
@@ -362,6 +377,22 @@ public class ShadowMap<K extends Comparable<K>, V> implements Map<K, V> {
     }
 
     // =================================
+    private final Predicate<Revision<K,V>> IS_CANONICAL = r -> r.canonical;
+    final class TakeUntil<T> implements Iterable<T> {
+        List<T> l = newArrayList();
+        public TakeUntil(Iterable<T> it, Predicate<T> pred) {
+            for (T t: it) {
+                l.add(t);
+                if (pred.test(t))
+                    break;
+            }
+        }
+        @Override
+        public Iterator<T> iterator() {
+            return l.iterator();
+        }
+    }
+
     final class TakeWhile<T> implements Iterator<T> {
         Iterator<T> iter;
         Predicate<T> pred;
@@ -371,7 +402,7 @@ public class ShadowMap<K extends Comparable<K>, V> implements Map<K, V> {
             this.pred = pred;
             if (iter.hasNext()) {
                 next = iter.next();
-                if ( ! pred.test(next))
+                if (!pred.test(next))
                     next = null;
             }
         }
@@ -383,7 +414,7 @@ public class ShadowMap<K extends Comparable<K>, V> implements Map<K, V> {
         public T next() {
             if (iter.hasNext()) {
                 next = iter.next();
-                if ( ! pred.test(next))
+                if (!pred.test(next))
                     next = null;
             }
             return next;
@@ -411,16 +442,23 @@ public class ShadowMap<K extends Comparable<K>, V> implements Map<K, V> {
             locked = true;
             canonical = true;
         }
-        private Revision(Revision<K, V> parent) {
-            this.parent = parent;
-            size = parent.size;
+        private Revision(Revision<K, V> previous) {
+            this.previous = previous;
+            size = previous.size;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("%d|%s %s %s", id, store.toString(), locked ? "locked" : "", canonical ? "canonical" : "");
         }
 
         private String tag = "";
         private boolean locked = false;
         private boolean canonical = false;
         private int size = 0;
-        private Revision<K, V> parent = null;
+        private Revision<K, V> previous = null;
         private Map<K, V> store = newHashMap();
+        private static AtomicInteger ID = new AtomicInteger(0);
+        private final int id = ID.getAndIncrement();
     }
 }

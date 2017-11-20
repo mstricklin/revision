@@ -2,7 +2,9 @@
 package edu.utexas.arlut.ciads.rev2;
 
 
+import static com.google.common.collect.Iterables.getFirst;
 import static com.google.common.collect.Iterables.getLast;
+import static com.google.common.collect.Lists.reverse;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -66,59 +68,22 @@ public class BTreeSansParent<T extends Comparable<T>> implements ITree<T> {
             root.addKey(value);
         } else {
             Node<T> node = root;
-            List<Node<T>> path = path(value);
+            List<Node<T>> path = reverse(path(value));
             log.info("insert {} path {}", value, path);
-            Node<T> home = getLast(path);
-            home.addKey(value);
-            if (home.isFull())
-                split(null, home);
-
-//            while (node != null) {
-//                if (node.numberOfChildren() == 0) {
-//                    node.addKey(value);
-//                    if (node.numberOfKeys() <= maxKeySize) {
-//                        // A-OK
-//                        break;
-//                    }
-//                    // Need to split up
-//                    split(node);
-//                    break;
-//                }
-//                // Navigate
-//
-//                // Lesser or equal
-//                T lesser = node.getKey(0);
-//                if (value.compareTo(lesser) <= 0) {
-//                    node = node.getChild(0);
-//                    continue;
-//                }
-//
-//                // Greater
-//                int numberOfKeys = node.numberOfKeys();
-//                int last = numberOfKeys - 1;
-//                T greater = node.getKey(last);
-//                if (value.compareTo(greater) > 0) {
-//                    node = node.getChild(numberOfKeys);
-//                    continue;
-//                }
-//
-//                // Search internal nodes
-//                for (int i = 1; i < node.numberOfKeys(); i++) {
-//                    T prev = node.getKey(i - 1);
-//                    T next = node.getKey(i);
-//                    if (value.compareTo(prev) > 0 && value.compareTo(next) <= 0) {
-//                        node = node.getChild(i);
-//                        break;
-//                    }
-//                }
-//            }
+            Node<T> head = head(path);
+            head.addKey(value);
+            if (head.isFull())
+                split(head, tail(path));
         }
 
         size++;
-
         return true;
     }
     // =================================
+    private List<Node<T>> cloned(List<Node<T>> path) {
+        return Collections.emptyList();
+    }
+    // path from root to node containing value
     private List<Node<T>> path(T value) {
         List<Node<T>> path = new ArrayList<>(8);
         Node<T> node = root;
@@ -165,7 +130,7 @@ public class BTreeSansParent<T extends Comparable<T>> implements ITree<T> {
      * @param nodeToSplit
      *            to split.
      */
-    private void split(Node<T> ppp, Node<T> nodeToSplit) {
+    private void split(Node<T> nodeToSplit, List<Node<T>> path) {
         Node<T> node = nodeToSplit;
         int numberOfKeys = node.numberOfKeys();
         int medianIndex = numberOfKeys / 2;
@@ -188,24 +153,23 @@ public class BTreeSansParent<T extends Comparable<T>> implements ITree<T> {
                 right.addChild(c);
         }
 
-        if (node.parent == null) {
+        Node<T> parent = head(path);
+
+        if (parent == null) {
             // new root, height of tree is increased
-            Node<T> newRoot = new Node<T>(null, maxKeySize, maxChildrenSize);
-            newRoot.addKey(medianValue);
-            node.parent = newRoot;
-            root = newRoot;
-            node = root;
-            node.addChild(left);
-            node.addChild(right);
+            root = new Node<T>(null, maxKeySize, maxChildrenSize);
+            root.addKey(medianValue);
+            root.addChild(left);
+            root.addChild(right);
         } else {
             // Move the median value up to the parent
-            Node<T> parent = node.parent;
+//            parent = new Node<T>(parent);
             parent.addKey(medianValue);
             parent.removeChild(node);
             parent.addChild(left);
             parent.addChild(right);
 
-            if (parent.numberOfKeys() > maxKeySize) split(null, parent);
+            if (parent.numberOfKeys() > maxKeySize) split(parent, tail(path));
         }
     }
 
@@ -253,7 +217,7 @@ public class BTreeSansParent<T extends Comparable<T>> implements ITree<T> {
                 this.combined(greatest);
             }
             if (greatest.numberOfChildren() > maxChildrenSize) {
-                this.split(null, greatest);
+                this.split(null, Collections.emptyList());
             }
         }
 
@@ -639,6 +603,14 @@ public class BTreeSansParent<T extends Comparable<T>> implements ITree<T> {
 
         protected Node<T> parent = null;
 
+        private Node(Node<T> src) {
+            this.parent = src.parent;
+            this.maxKeySize = src.maxKeySize;
+            this.keys = Arrays.copyOf(src.keys, src.keys.length);
+            this.keysSize = src.keysSize;
+            this.children = Arrays.copyOf(src.children, src.children.length);
+            this.childrenSize = src.childrenSize;
+        }
         private Node(Node<T> parent, int maxKeySize, int maxChildrenSize) {
             this.parent = parent;
             this.maxKeySize = maxKeySize;
@@ -921,5 +893,13 @@ public class BTreeSansParent<T extends Comparable<T>> implements ITree<T> {
                 }
             }
         }
+    }
+    // =================================
+    private static <Q> Q head(List<Q> l) {
+        return getFirst(l, null);
+    }
+
+    private static <Q> List<Q> tail(List<Q> l) {
+        return l.subList(1, l.size());
     }
 }
