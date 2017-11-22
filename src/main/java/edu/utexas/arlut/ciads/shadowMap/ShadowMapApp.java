@@ -1,6 +1,7 @@
 // CLASSIFICATION NOTICE: This file is UNCLASSIFIED
 package edu.utexas.arlut.ciads.shadowMap;
 
+import com.google.common.base.Stopwatch;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +11,7 @@ import static com.google.common.collect.Sets.newHashSet;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.IntStream;
 
 @Slf4j
 public class ShadowMapApp {
@@ -64,6 +66,35 @@ public class ShadowMapApp {
 
         final Set<String> keys = newHashSet();
         cm.forEach((k, v) -> keys.add(k));
+
+
+        IntStream.range(0, 10000)
+                 .mapToObj(Integer::toString)
+                 .forEach(i -> {
+                     cm.put("K" + i, "V" + i);
+                     cm.put("Ka" + i, "Va" + i);
+                     cm.commit();
+                 });
+
+        cm.dumpAll();
+
+
+        for (int i=0; i<500; ++i) {
+            Stopwatch stopwatch = Stopwatch.createStarted();
+            log.info("K{} {}", i, cm.get("K"+i));
+            stopwatch.stop(); // optional
+            log.info("time: {}", stopwatch);
+        }
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        log.info("K999 {}", cm.get("K999"));
+        stopwatch.stop(); // optional
+        log.info("time: {}", stopwatch);
+
+        stopwatch.reset();
+        stopwatch.start();
+        log.info("K23 {}", cm.get("K23"));
+        stopwatch.stop(); // optional
+        log.info("time: {}", stopwatch);
 
 
 

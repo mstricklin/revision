@@ -9,6 +9,7 @@ import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.junit.Assert.*;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -139,8 +140,28 @@ public class TestShadowMap {
     public void entrySet() {
         cm.put("K1", "V1");
         cm.put("K2", "V2");
+        cm.commit();
+        assertEquals(2, cm.entrySet().size());
+
+
+        cm.put("K1", "V1a");
+
+        cm.dumpAll();
         for (Map.Entry<String, String> e : cm.entrySet()) {
             log.info("{} => {}", e.getKey(), e.getValue());
+        }
+        log.info("sz: {}", cm.entrySet().size());
+//        ShadowMap.SMIterator smi3 = cm.smiterator3();
+//        while (smi3.hasNext()) {
+//            Map.Entry<String, String> e = smi3.next();
+//            log.info("\t{}", e);
+//        }
+        List<Map.Entry<String,String>> l = newArrayList(cm.entrySet());
+        log.info("List: {}", l);
+        assertEquals(2, l.size());
+        log.info("");
+        for (Map.Entry<String, String> e: cm.entrySet()) {
+            log.info("\t{}", e);
         }
 
         // clear
@@ -177,6 +198,16 @@ public class TestShadowMap {
         // size
         // iterator
         // contains
+
+        // operations on keys pass through:
+        // clear
+        // contains(Object)
+        // containsAll(Collection<>)
+        // isEmpty
+        // remove(Object o)
+        // removeAll(Collection<>)
+        // retainAll(Collection<>)
+        // size
     }
     // =================================
     @Test
@@ -232,8 +263,7 @@ public class TestShadowMap {
         log.info("");
         log.info("=====================");
 
-        final Set<String> keys = newHashSet();
-        cm.forEach((k, v) -> keys.add(k));
+
 //        final Set<String> keys = newHashSet();
 //        cm.put("K1", "V1");
 //        cm.put("K2", "V2");
@@ -252,6 +282,27 @@ public class TestShadowMap {
 //        for (Map.Entry e: cm.entrySet())
 //            log.info("{} => {}", e.getKey(), e.getValue());
 //
+        log.info("=======");
+        log.info("");
+        cm.clear();
+        cm.commit();
+        cm.put("K1", "V1");
+        cm.put("K2", "V2");
+        cm.commit();
+        cm.put("K1", "V1a");
+        cm.commit();
+        cm.dumpAll();
+        log.info("");
+        for (Map.Entry<String, String> e: cm.entrySet())
+            log.info("{} => {}", e.getKey(), e.getValue());
+
+        final Set<String> keys = newHashSet();
+        cm.forEach((k, v) -> keys.add(k));
+
+        log.info("======");
+//        while (sm2.hasNext()) {
+//            log.info("X {}", sm2.next());
+//        }
     }
     // =================================
     @Test
@@ -263,6 +314,18 @@ public class TestShadowMap {
         for (String v : cm.values()) {
             log.info("value {}", v);
         }
+        assertEquals(3, cm.values().size());
+
+        // operations on values pass through:
+        // clear
+        // contains(Object)
+        // containsAll(Collection<>)
+        // isEmpty
+        // remove(Object o)
+        // removeAll(Collection<>)
+        // retainAll(Collection<>)
+        // size
+
 
 
     }

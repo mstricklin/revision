@@ -1,12 +1,11 @@
 package edu.utexas.arlut.ciads.shadowMap;
 
-import com.google.common.collect.FluentIterable;
+import com.google.common.collect.*;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -138,7 +137,7 @@ public class ShadowMap<K extends Comparable<K>, V> implements Map<K, V> {
 
     @Override
     public Collection<V> values() {
-        return null;
+        return Collections2.transform(entrySet(), e->e.getValue());
     }
 
     @Override
@@ -150,49 +149,18 @@ public class ShadowMap<K extends Comparable<K>, V> implements Map<K, V> {
     @Override
     public void forEach(BiConsumer<? super K, ? super V> action) {
         checkNotNull(action);
-
-        List<Revision<K, V>> revs = newArrayList();
-//        history.stream().peek(r -> revs.add(r)).peek(r -> log.info("{}", r.store)).allMatch(r-> true);
-        history.stream().peek(r -> revs.add(r)).peek(r -> log.info("{}", r.store)).allMatch(r -> !r.canonical);
-        log.info("");
-        history.stream().peek(r -> revs.add(r)).peek(r -> log.info("{}", r.store)).anyMatch(r -> r.canonical);
-
-        log.info("");
-
-        List<Revision<K, V>> l = newArrayList();
-        for (Revision<K, V> r : history) {
-            l.add(r);
-            if (r.canonical) break;
-        }
-        Iterable<Entry<K, V>> it = FluentIterable.from(l)
-                                                 .transformAndConcat(f -> f.store.entrySet());
-
-        Iterator<Entry<K, V>> iter = it.iterator();
-        while (iter.hasNext()) {
-            Entry<K, V> e = iter.next();
-            log.info("FI Entry {} => {}", e.getKey(), e.getValue());
-        }
-
-        log.info("");
-        log.info("TakeUntil:");
-        Iterable<Revision<K,V>> tu = new TakeUntil<>(history, IS_CANONICAL);
-        for (Revision<K,V> r: tu)
-            log.info("rev: {}", r);
-
-//        Iterator<Entry<K,V>> it2 = TakeWhile(history.iterator(), r->r.canonical);
-//        for (Entry e : it) {
-//            log.info("FI Entry {} => {}", e.getKey(), e.getValue());
-//        }
         for (Entry e : entrySet()) {
             action.accept((K)e.getKey(), (V)e.getValue());
+        }
+
+        for (Revision<K,V> r: shortcutHistory()) {
+            log.info("TakeUntil Revision {}", r);
         }
     }
 
     public void dump() {
-        for (Revision r : history) {
+        for (Revision r : shortcutHistory()) {
             log.info("{}", r);
-            if (r.canonical)
-                break;
         }
     }
     public void dumpAll() {
@@ -204,26 +172,23 @@ public class ShadowMap<K extends Comparable<K>, V> implements Map<K, V> {
     @Override
     public int hashCode() {
         int h = 0;
-        for (Revision<K, V> r : history) {
+        for (Revision<K, V> r : shortcutHistory()) {
             h = 31 * h + (r == null ? 0 : r.hashCode());
-            if (r.canonical)
-                break;
         }
         return h;
     }
     @Override
     public String toString() {
+        // TODO
         return "ZZZ";
     }
 
     // =======================================
     private V lookup(Object k) {
-        for (Revision<K, V> r : history) {
+        for (Revision<K, V> r : shortcutHistory()) {
             V v = r.store.get(k);
             if (null != v)
                 return v;
-            if (r.canonical)
-                break;
         }
         return null;
     }
@@ -259,11 +224,6 @@ public class ShadowMap<K extends Comparable<K>, V> implements Map<K, V> {
         public final boolean remove(Object key) {
             return null != ShadowMap.this.remove(key);
         }
-        @Override
-        public final void forEach(Consumer<? super K> action) {
-            // TODO...
-        }
-
     }
 
     final class EntrySet extends AbstractSet<Entry<K, V>> {
@@ -328,96 +288,57 @@ public class ShadowMap<K extends Comparable<K>, V> implements Map<K, V> {
 
     // =================================
     private abstract class SMIterator {
-        // TODO: concurrent modification exceptions?
-        Entry<K, V> nextNode = null;
-        Entry<K, V> currNode = null;
-        Revision<K, V> rev = current;
-        Iterator<Entry<K, V>> it = rev.store.entrySet().iterator();
 
         SMIterator() {
-            List<Revision<K, V>> revs = newArrayList();
-            for (Revision<K, V> r : history) {
-                revs.add(r);
-                if (r.canonical) break;
+            for (Revision<K,V> r: history) {
+                Set<K> s = r.store.keySet();
+                keys = Sets.union(keys, r.store.keySet());
             }
-//            FluentIterable.of(revs)
-//                          .transformAndConcat(rev->rev.store.entrySet());
-            history.stream().peek(rev -> revs.add(rev)).anyMatch(rev -> rev.canonical);
-
-            if (it.hasNext())
-                nextNode = it.next();
-
+            it = keys.iterator();
         }
-        private Entry<K, V> next() {
-            return it.hasNext() ? it.next() : null;
+        Set<K> keys = Collections.emptySet();
+        Iterator<K> it;
+        public boolean hasNext() {
+            return it.hasNext();
         }
-        final Map.Entry<K, V> nextNode() {
-            Entry n = nextNode;
-            if (it.hasNext())
-                nextNode = it.next();
-            else {
-                if (rev.canonical)
-                    nextNode = null;
-                else {
-                    rev = rev.previous;
-                    if (null != rev) {
-                        it = rev.store.entrySet().iterator();
-                        nextNode = next();
-                    }
-                }
-            }
-            return n;
-        }
-        public final boolean hasNext() {
-            return nextNode != null;
-        }
-        public final void remove() {
-            throw new UnsupportedOperationException();
+        public Entry<K, V> nextNode() {
+            K k = it.next();
+            return new AbstractMap.SimpleImmutableEntry(k, get(k));
         }
     }
-
     // =================================
     private final Predicate<Revision<K,V>> IS_CANONICAL = r -> r.canonical;
-    final class TakeUntil<T> implements Iterable<T> {
-        List<T> l = newArrayList();
-        public TakeUntil(Iterable<T> it, Predicate<T> pred) {
-            for (T t: it) {
-                l.add(t);
-                if (pred.test(t))
-                    break;
-            }
+
+    private final Iterable<Revision<K,V>> shortcutHistory() {
+        return new TakeUntil(history, IS_CANONICAL);
+    }
+    private final class TakeUntil<T> implements Iterable<T> {
+        private final Iterator<T> it;
+        private final Predicate<T> pred;
+        private TakeUntil(Iterable<T> it, Predicate<T> pred) {
+            this.it = it.iterator();
+            this.pred = pred;
         }
+
         @Override
         public Iterator<T> iterator() {
-            return l.iterator();
-        }
-    }
-
-    final class TakeWhile<T> implements Iterator<T> {
-        Iterator<T> iter;
-        Predicate<T> pred;
-        volatile T next = null;
-        public TakeWhile(Iterator<T> iter, Predicate<T> pred) {
-            this.iter = iter;
-            this.pred = pred;
-            if (iter.hasNext()) {
-                next = iter.next();
-                if (!pred.test(next))
-                    next = null;
-            }
-        }
-        @Override
-        public boolean hasNext() {
-            return next != null;
-        }
-        @Override
-        public T next() {
-            if (iter.hasNext()) {
-                next = iter.next();
-                if (!pred.test(next))
-                    next = null;
-            }
-            return next;
+            return new Iterator<T>() {
+                T curr = null;
+                @Override
+                public boolean hasNext() {
+                    if (null != curr && pred.test(curr))
+                        return false;
+                    if (it.hasNext()) {
+                        curr = it.next();
+                        return true;
+                    }
+                    return false;
+                }
+                @Override
+                public T next() {
+                    return curr;
+                }
+            };
         }
     }
 
@@ -430,6 +351,7 @@ public class ShadowMap<K extends Comparable<K>, V> implements Map<K, V> {
 
     private Revision<K, V> current = new Revision<>();
 
+    // TODO
     // need to make this a singly-linked list, so it can be stitched into
     // other stacks
     private final Deque<Revision<K, V>> history = newArrayDeque();
@@ -450,6 +372,18 @@ public class ShadowMap<K extends Comparable<K>, V> implements Map<K, V> {
         @Override
         public String toString() {
             return String.format("%d|%s %s %s", id, store.toString(), locked ? "locked" : "", canonical ? "canonical" : "");
+        }
+        @Override
+        public int hashCode() {
+            return store.hashCode();
+        }
+        @Override
+        public boolean equals(Object that) {
+            if (this == that) return true;
+            if (null == that) return false;
+            if (getClass() != that.getClass()) return false;
+            Revision rev = (Revision)that;
+            return rev.store.equals(store);
         }
 
         private String tag = "";
